@@ -708,15 +708,15 @@ vector<moveInfo> Board::calculateLegalMoves(BoardState *currentBoardState) {
         calculateKingLegalMoves(Piece::bkLoc, currentBoardState, currentLegal, blackThreatened);
         if (blackThreatened.amountAttacked != 2) {
             for (auto it : Piece::brLoc)
-                calculateRookLegalMoves(it, Piece::bkLoc, currentBoardState, currentLegal, whiteThreatened);
+                calculateRookLegalMoves(it, Piece::bkLoc, currentBoardState, currentLegal, blackThreatened);
             for (auto it : Piece::bnLoc)
-                calculateKnightLegalMoves(it, Piece::bkLoc, currentBoardState, currentLegal, whiteThreatened);
+                calculateKnightLegalMoves(it, Piece::bkLoc, currentBoardState, currentLegal, blackThreatened);
             for (auto it : Piece::bqLoc)
-                calculateQueenLegalMoves(it, Piece::bkLoc, currentBoardState, currentLegal, whiteThreatened);
+                calculateQueenLegalMoves(it, Piece::bkLoc, currentBoardState, currentLegal, blackThreatened);
             for (auto it : Piece::bpLoc)
-                calculatePawnLegalMoves(it, Piece::bkLoc, currentBoardState, currentLegal, whiteThreatened);
+                calculatePawnLegalMoves(it, Piece::bkLoc, currentBoardState, currentLegal, blackThreatened);
             for (auto it : Piece::bbLoc)
-                calculateBishopLegalMoves(it, Piece::bkLoc, currentBoardState, currentLegal, whiteThreatened);
+                calculateBishopLegalMoves(it, Piece::bkLoc, currentBoardState, currentLegal, blackThreatened);
         }
     }
     return currentLegal;
@@ -964,68 +964,51 @@ void Board::calculateQueenLegalMoves(pii queenBox, pii kingBox, BoardState* curr
                     addStraightDownMoves(queenBox, currentBoardState, currentLegalMoves);
                     addAll = false;
                 }
-
             }
-
-
         }
         //the Piece::queen is below the Piece::king.
         else if (queenBox.ss > kingBox.ss) {
-            //no Piece::queen moves
             if ((currentKingInfo.threatenedInfo & KingThreatenedInfo::straightDownThreatened) == KingThreatenedInfo::straightDownThreatened) {
                 if (currentKingInfo.straightDownBox.ss > queenBox.ss) {
                     addStraightUpMoves(queenBox, currentBoardState, currentLegalMoves);
                     addStraightDownMoves(queenBox, currentBoardState, currentLegalMoves);
                     addAll = false;
                 }
-
             }
         }
     }
     else if (inSameRow(queenBox, kingBox)) {
-        //Piece::queen is to the right
         if (queenBox.ff > kingBox.ff) {
-            //no Piece::queen moves
             if ((currentKingInfo.threatenedInfo & KingThreatenedInfo::straightRightThreatened) == KingThreatenedInfo::straightRightThreatened) {
                 if (currentKingInfo.straightRightBox.ff > queenBox.ff) {
                     addStraightLeftMoves(queenBox, currentBoardState, currentLegalMoves);
                     addStraightRightMoves(queenBox, currentBoardState, currentLegalMoves);
                     addAll = false;
                 }
-
             }
-
         }
         else if (queenBox.ff < kingBox.ff) {
-            //add no Piece::queen moves
             if ((currentKingInfo.threatenedInfo & KingThreatenedInfo::straightLeftThreatened) == KingThreatenedInfo::straightLeftThreatened) {
                 if (currentKingInfo.straightLeftBox.ff < queenBox.ff) {
                     addStraightLeftMoves(queenBox, currentBoardState, currentLegalMoves);
                     addStraightRightMoves(queenBox, currentBoardState, currentLegalMoves);
                     addAll = false;
                 }
-
             }
         }
-
     }
     else if (inSameDiagonal(queenBox, kingBox)) {
-        //Piece::queen above Piece::king
         if (queenBox.ss < kingBox.ss) {
-
-
             if ((currentKingInfo.threatenedInfo & KingThreatenedInfo::upRightThreatened) == KingThreatenedInfo::upRightThreatened) {
                 if (currentKingInfo.upRightBox.ff > queenBox.ff) {
                     addUpRightMoves(queenBox, currentBoardState, currentLegalMoves);
                     addDownLeftMoves(queenBox, currentBoardState, currentLegalMoves);
                     addAll = false;
                 }
-
             }
         }
         //Piece::king below Piece::king
         if (queenBox.ss > kingBox.ss) {
-
             if ((currentKingInfo.threatenedInfo & KingThreatenedInfo::downLeftThreatened) == KingThreatenedInfo::downLeftThreatened) {
                 if (currentKingInfo.downLeftBox.ff < queenBox.ff) {
                     addUpRightMoves(queenBox, currentBoardState, currentLegalMoves);
@@ -1065,7 +1048,6 @@ void Board::calculateQueenLegalMoves(pii queenBox, pii kingBox, BoardState* curr
 
     //if it's not in any of the things, we can just add on all the possible Piece::rook moves.
     if (addAll) {
-
         calculateQueenMoves(queenBox, currentBoardState, currentLegalMoves);
     }
 }
@@ -1952,7 +1934,6 @@ void Board::addUpLeftPawnMoves(pii box, BoardState* currentBoardState, std::vect
 }
 
 void Board::updateThreats(moveInfo lastMove, BoardState * currentBoardState) {
-    //see where they moved from first.
     pii kingBox;
     uint8_t **board = currentBoardState->getBoard();
     if (currentBoardState->whiteTurn) {
@@ -2028,14 +2009,13 @@ void Board::updateThreats(moveInfo lastMove, BoardState * currentBoardState) {
         }
     }
 
-    //if we castled just update for the Piece::rook. there's a better way to do this but have you seen the rest of my code?
     if (lastMove.kingSideCastle || lastMove.queenSideCastle) {
         updateStraightDownThreats( currentBoardState);
         updateStraightUpThreats( currentBoardState);
         updateStraightLeftThreats( currentBoardState);
         updateStraightRightThreats( currentBoardState);
     }
-    if (inSameRow(kingBox, lastMove.to)) {                                  //std::cout << "Last moveInfo was from same row as Piece::king. " << std::endl;
+    if (inSameRow(kingBox, lastMove.to)) {
         if (kingBox.ff < lastMove.to.ff)     updateStraightRightThreats( currentBoardState);
         else                               updateStraightLeftThreats( currentBoardState);
     }
@@ -2055,7 +2035,7 @@ void Board::updateThreats(moveInfo lastMove, BoardState * currentBoardState) {
         else                               updateUpLeftThreats( currentBoardState);
     }
 
-    //now we look at where FROM the new piece moved.
+
     if (inSameRow(lastMove.from, kingBox) && !inSameRow(lastMove.from, lastMove.to)) {
         if (lastMove.from.ff > kingBox.ff)   updateStraightRightThreats( currentBoardState);
         else                               updateStraightLeftThreats( currentBoardState);
@@ -2565,10 +2545,10 @@ void Board::updateDownLeftThreats(BoardState * currentBoardState) {
             else {
                 if ((board[ff][ss] & Piece::bishop) == Piece::bishop || (board[ff][ss] & Piece::queen) == Piece::queen) {
                     blackThreatened.downLeftBox = { ff, ss };
+
                     if (defense == 0) {
                         blackThreatened.attackedInfo |= KingThreatenedInfo::downLeftThreatened;
                         blackThreatened.threatenedInfo |= KingThreatenedInfo::downLeftThreatened;
-
                         blackThreatened.amountAttacked++;
                         blackThreatened.attackedFrom = { ff, ss };
                         foundAThreat = true;
@@ -2580,6 +2560,7 @@ void Board::updateDownLeftThreats(BoardState * currentBoardState) {
                         foundAThreat = true;
                         break;
                     }
+                    //cout << foundAThreat << " " << blackThreatened.downLeftBox.ff << " " << blackThreatened.downLeftBox.ss << endl;
                 }
             }
         }
